@@ -1,6 +1,8 @@
 const express = require('express');
 const fetch = require('node-fetch'); // v2
 const path = require('path');
+const { URL } = require('url');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,10 +23,21 @@ app.get('/proxy', async (req, res) => {
     const response = await fetch(targetUrl);
     let body = await response.text();
 
-    // Rewrite relative links to go through the proxy
+    // Remove <base> tags (can break relative links)
+    body = body.replace(/<base [^>]+>/g, '');
+
+    // Rewrite all href/src URLs to go through proxy
     body = body.replace(
-      /(href|src)=['"]((?!http)[^'"]+)['"]/g,
-      `$1="/proxy?url=${targetUrl}/$2"`
+      /(href|src)=['"]([^'"]+)['"]/g,
+      (match, attr, link) => {
+        try {
+          // Convert relative URLs to absolute using the target URL
+          const absoluteUrl = new URL(link, targetUrl).href;
+          return `${attr}="/proxy?url=${absoluteUrl}"`;
+        } catch {
+          return match; // leave it if URL parsing fails
+        }
+      }
     );
 
     res.send(body);
