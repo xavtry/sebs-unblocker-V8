@@ -6,7 +6,7 @@ const { URL } = require('url');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve frontend static files from public/
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve index.html at root
@@ -23,10 +23,10 @@ app.get('/proxy', async (req, res) => {
     const response = await fetch(targetUrl);
     let body = await response.text();
 
-    // Remove <base> tags
+    // Remove <base> tags (breaks relative URLs)
     body = body.replace(/<base [^>]+>/g, '');
 
-    // Rewrite relative URLs to go through proxy
+    // Rewrite href/src URLs to go through proxy
     body = body.replace(
       /(href|src)=['"]([^'"]+)['"]/g,
       (match, attr, link) => {
@@ -46,17 +46,15 @@ app.get('/proxy', async (req, res) => {
 });
 
 // ------------------ SEARCH ROUTE ------------------
-// This uses DuckDuckGo HTML scraping (free, no API key needed)
+// Fetch top 10 results from DuckDuckGo
 app.get('/search', async (req, res) => {
   const query = req.query.q;
   if (!query) return res.status(400).send('No query provided');
 
   try {
-    // Fetch DuckDuckGo search results HTML
     const response = await fetch(`https://duckduckgo.com/html/?q=${encodeURIComponent(query)}`);
     const html = await response.text();
 
-    // Simple regex to get top 10 results (title + URL + snippet)
     const regex = /<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([^<]+)<\/a>.*?<a class="result__snippet">([^<]+)<\/a>/gs;
     const results = [];
     let match;
