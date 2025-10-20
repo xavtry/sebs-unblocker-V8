@@ -1,0 +1,13 @@
+{
+  "name": "seb-unblocker-proxy",
+  "version": "1.0.0",
+  "description": "Multi-tab browser with proxy for external sites",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^3.4.1"
+  }
+}
