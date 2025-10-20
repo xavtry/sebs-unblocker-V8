@@ -1,5 +1,5 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // using v2 for CommonJS
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -16,7 +16,7 @@ app.get('/proxy', async (req, res) => {
     let body = await response.text();
 
     // Fix relative links to go through the proxy
-    body = body.replace(/(href|src)=["'](?!http)([^"']+)["']/g, `$1="/proxy?url=${targetUrl}/$2"`);
+    body = body.replace(/(href|src)=['"](?!http)([^'"]+)['"]/g, `$1="/proxy?url=${targetUrl}/$2"`);
 
     res.send(body);
   } catch (err) {
