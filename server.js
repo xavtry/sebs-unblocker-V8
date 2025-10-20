@@ -1,10 +1,16 @@
 const express = require('express');
-const fetch = require('node-fetch'); // using v2 for CommonJS
+const fetch = require('node-fetch'); // v2
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve frontend files
-app.use(express.static('public'));
+// Serve frontend static files from public/
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve index.html at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Proxy route
 app.get('/proxy', async (req, res) => {
@@ -15,8 +21,11 @@ app.get('/proxy', async (req, res) => {
     const response = await fetch(targetUrl);
     let body = await response.text();
 
-    // Fix relative links to go through the proxy
-    body = body.replace(/(href|src)=['"](?!http)([^'"]+)['"]/g, `$1="/proxy?url=${targetUrl}/$2"`);
+    // Rewrite relative links to go through the proxy
+    body = body.replace(
+      /(href|src)=['"]((?!http)[^'"]+)['"]/g,
+      `$1="/proxy?url=${targetUrl}/$2"`
+    );
 
     res.send(body);
   } catch (err) {
